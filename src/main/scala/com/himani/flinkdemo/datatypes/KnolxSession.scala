@@ -42,14 +42,6 @@ object KnolxSession {
     if (tokens.length != 6) {
       throw new RuntimeException("Invalid record: " + line)
     }
-    /*
-    session_id: Long
-    session_type: string
-    session-date: DateTime
-    session-name: string
-    audience-count: long
-    isMeetup: boolean
-     */
     try {
       val sessionId = tokens(0).toLong
       val sessionType = tokens(1).toString //DateTime.parse(tokens(1), TimeFormatter)

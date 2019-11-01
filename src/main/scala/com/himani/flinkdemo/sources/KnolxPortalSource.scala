@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.dataartisans.flink_demo.sources
+package com.himani.flinkdemo.sources
 
 import java.io._
 import java.util.{Calendar, Random}
 import java.util.zip.GZIPInputStream
 
-import com.dataartisans.flink_demo.datatypes.KnolxSession
-import org.apache.flink.streaming.api.functions.source.{EventTimeSourceFunction}
+import com.himani.flinkdemo.datatypes.KnolxSession
+import org.apache.flink.streaming.api.functions.source.EventTimeSourceFunction
 import org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext
 import org.apache.flink.streaming.api.watermark.Watermark
 import org.joda.time.DateTime

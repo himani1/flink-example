@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-package com.dataartisans.flink_demo.examples
+package com.himani.flinkdemo.examples
 
 import com.dataartisans.flink_demo.datatypes.KnolxSession
 import com.dataartisans.flink_demo.sinks.ElasticsearchUpsertSink
 import com.dataartisans.flink_demo.sources.KnolxPortalSource
 import com.dataartisans.flink_demo.utils.DemoStreamEnvironment
+import com.himani.flinkdemo.datatypes.KnolxSession
+import com.himani.flinkdemo.sinks.ElasticsearchUpsertSink
+import com.himani.flinkdemo.sources.KnolxPortalSource
+import com.himani.flinkdemo.utils.DemoStreamEnvironment
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment
 import org.apache.flink.streaming.api.scala._
@@ -36,7 +40,7 @@ import org.apache.flink.streaming.api.scala._
  * for more detail.
  *
  */
-object MostAudienceCount {
+object TotalKnolxSessions {
 
   def main(args: Array[String]) {
 
@@ -59,11 +63,11 @@ object MostAudienceCount {
     val sessions: DataStream[KnolxSession] = env.addSource(new KnolxPortalSource(
       data, maxServingDelay, servingSpeedFactor))
 
-    val popularAudience: DataStream[KnolxSession] = sessions.filter(session => session.audienceCount>10)
-
-    popularAudience.print()
     val totalKnolxThatAreNotMeetup: DataStream[KnolxSession] = sessions
       .filter(!_.isMeetup)
+
+    totalKnolxThatAreNotMeetup.print()
+
     /*val totalKnolxThatAreMeetup: DataStream[KnolxSession] = sessions
       .filter(_.isMeetup)
 
@@ -72,26 +76,18 @@ object MostAudienceCount {
     if (writeToElasticsearch) {
       print("====here!!!")
       // write to Elasticsearch
-      popularAudience.addSink(new CntTimeByLocUpsert(elasticsearchHost, elasticsearchPort))
-//      totalKnolxThatAreNotMeetup.addSink(new CntTimeByLocUpsert(elasticsearchHost, elasticsearchPort))
-      /*.addSink((fun: KnolxSession) => {
-        print("fun:: "+fun)
-        new CntTimeByLocUpsert(elasticsearchHost,elasticsearchPort)
-        Unit
-      })
-    }*/
-
-      env.execute("Total passenger count per location")
+      totalKnolxThatAreNotMeetup.addSink(new KnolxSessionUpsert(elasticsearchHost, elasticsearchPort))
+      env.execute("Total knolx sessions")
 
     }
 
-    class CntTimeByLocUpsert(host: String, port: Int)
+    class KnolxSessionUpsert(host: String, port: Int)
       extends ElasticsearchUpsertSink[KnolxSession](
         host,
         port,
         "elasticsearch",
         "knolx-portal",
-        "knolx-sessions-audience-count") {
+        "knolx-sessions") {
 
       override def insertJson(r: (KnolxSession)): Map[String, AnyRef] = {
         Map(

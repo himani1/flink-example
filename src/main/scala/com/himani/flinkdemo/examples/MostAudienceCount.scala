@@ -1,42 +1,14 @@
-/*
- * Copyright 2015 data Artisans GmbH
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package com.himani.flinkdemo.examples
 
-package com.dataartisans.flink_demo.examples
-
-import com.dataartisans.flink_demo.datatypes.KnolxSession
-import com.dataartisans.flink_demo.sinks.ElasticsearchUpsertSink
-import com.dataartisans.flink_demo.sources.KnolxPortalSource
-import com.dataartisans.flink_demo.utils.DemoStreamEnvironment
+import com.himani.flinkdemo.datatypes.KnolxSession
+import com.himani.flinkdemo.sinks.ElasticsearchUpsertSink
+import com.himani.flinkdemo.sources.KnolxPortalSource
+import com.himani.flinkdemo.utils.DemoStreamEnvironment
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment
 import org.apache.flink.streaming.api.scala._
 
-/**
- * Apache Flink DataStream API demo application.
- *
- * The program processes a stream of taxi ride events from the New York City Taxi and Limousine
- * Commission (TLC).
- * It computes for each location the total number of persons that arrived by taxi.
- *
- * See
- * http://github.com/dataartisans/flink-streaming-demo
- * for more detail.
- *
- */
-object TotalKnolxSessions {
+object MostAudienceCount {
 
   def main(args: Array[String]) {
 
@@ -59,11 +31,11 @@ object TotalKnolxSessions {
     val sessions: DataStream[KnolxSession] = env.addSource(new KnolxPortalSource(
       data, maxServingDelay, servingSpeedFactor))
 
+    val popularAudience: DataStream[KnolxSession] = sessions.filter(session => session.audienceCount > 10)
+
+    popularAudience.print()
     val totalKnolxThatAreNotMeetup: DataStream[KnolxSession] = sessions
       .filter(!_.isMeetup)
-
-    totalKnolxThatAreNotMeetup.print()
-
     /*val totalKnolxThatAreMeetup: DataStream[KnolxSession] = sessions
       .filter(_.isMeetup)
 
@@ -72,25 +44,18 @@ object TotalKnolxSessions {
     if (writeToElasticsearch) {
       print("====here!!!")
       // write to Elasticsearch
-      totalKnolxThatAreNotMeetup.addSink(new CntTimeByLocUpsert(elasticsearchHost, elasticsearchPort))
-      /*.addSink((fun: KnolxSession) => {
-        print("fun:: "+fun)
-        new CntTimeByLocUpsert(elasticsearchHost,elasticsearchPort)
-        Unit
-      })
-    }*/
-
-      env.execute("Total passenger count per location")
+      popularAudience.addSink(new AudienceUpsert(elasticsearchHost, elasticsearchPort))
+      env.execute("most aundience")
 
     }
 
-    class CntTimeByLocUpsert(host: String, port: Int)
+    class AudienceUpsert(host: String, port: Int)
       extends ElasticsearchUpsertSink[KnolxSession](
         host,
         port,
         "elasticsearch",
         "knolx-portal",
-        "knolx-sessions") {
+        "knolx-sessions-audience-count") {
 
       override def insertJson(r: (KnolxSession)): Map[String, AnyRef] = {
         Map(

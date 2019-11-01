@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.dataartisans.flink_demo.sinks
+package com.himani.flinkdemo.sinks
 
 import java.util
 

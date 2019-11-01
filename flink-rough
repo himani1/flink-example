@@ -1,0 +1,30 @@
+session_id: Long
+session_type: string
+session-date: DateTime
+session-name: string
+audience-count: long
+isMeetup: boolean 
+
+
+6732771,2013-01-01 03:17:24,END,-73.948800000000006,40.586067,1,1.3999999999999999
+
+
+6732117,"AI/ML",2013-01-01 03:17:24,"topic 1",100,FALSE
+6732119,"Big Data",2019-01-01 03:17:24,"topic 1",100,FALSE
+
+
+curl -XPUT "http://localhost:9200/knolx-portal"
+
+curl -XPUT "http://localhost:9200/knolx-portal/_mapping/knolx-sessions" -d'
+{
+ "knolx-sessions" : {
+   "properties" : {
+     "session_id": {"type": "integer"},
+     "session_type": {"type": "string"},
+     "session_date": {"type": "date"},
+     "session_name": {"type": "string"},
+     "audience_count": {"type": "integer"},
+     "is_meetup": {"type": "string"}
+   }
+ }
+}'
